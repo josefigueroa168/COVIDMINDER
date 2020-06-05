@@ -99,7 +99,7 @@ ui <-
                                      ),
                                      column(4, id = "sidebar_ny_new_case",
                                             tags$h2("New York Regions Map"),
-                                            img(src="New-York-Regional-Map.png",style="width: 90%;"),
+                                            img(src="nys-regions-01.png",style="width: 90%;"),
                                             HTML(paste0("<div>
                                <strong>Date: </strong>",update_date,"<br>
                                <b>DATA SOURCE:</b> <a href='https://on.ny.gov/39VXuCO'>heath.data.ny.gov (daily)</a>
@@ -156,7 +156,7 @@ ui <-
                                      column(4,
                                             id = "sidebar_ny_CoT",
                                             tags$h2("New York Regions Map"),
-                                            img(src="New-York-Regional-Map.png",style="width: 90%;"),
+                                            img(src="nys-regions-01.png",style="width: 90%;"),
                                             HTML(paste0("<div>
                                <strong>Date: </strong>",update_date,"<br>
                                <b>DATA SOURCE:</b> <a href='https://on.ny.gov/39VXuCO'>heath.data.ny.gov (daily)</a> and 
@@ -213,7 +213,7 @@ ui <-
                                 </div>")),
                                      column(4, id = "sidebar_ny_CoT_region",
                                             tags$h2("New York Regions Map"),
-                                            img(src="New-York-Regional-Map.png",style="width: 90%;"),
+                                            img(src="nys-regions-01.png",style="width: 90%;"),
                                             HTML(paste0("<div>
                                <strong>Date: </strong>",update_date,"<br>
                                <b>DATA SOURCE:</b> <a href='https://on.ny.gov/39VXuCO'>heath.data.ny.gov (daily)</a> and 
@@ -1287,14 +1287,13 @@ server <- function(input, output, session) {
       geom_line(size=select.size) + 
       geom_label_repel(
         data=highlight_points,  
-        aes(label=Region,fill=Region), 
+        aes(label=Region), 
         box.padding = unit(1.75, 'lines'),
-        color = "black",
         segment.color = "black",
         size = 5,
         show.legend = FALSE
         ) +
-      scale_color_manual(values=NY_region_palette, aesthetics = c("fill", "box.padding")) +
+      scale_color_manual(values=NY_region_palette, aesthetics = c("color", "box.padding")) +
       coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = FALSE) +
       geom_vline(aes(xintercept=as_datetime("2020-03-20"), linetype="Gov. Cuomo issues stay-at-home order"), color = "black") + 
       geom_vline(aes(xintercept=as_datetime("2020-05-15"), linetype="Gov. Cuomo issues Phase 1 Reopening (5 Regions)"), color = "blue") + 
@@ -1391,14 +1390,13 @@ server <- function(input, output, session) {
       geom_line(size=select.size) + 
       geom_label_repel(
         data=highlight_points,  
-        aes(label=Region,fill=Region), 
+        aes(label=Region), 
         box.padding = unit(1.75, 'lines'),
-        color = "black",
         segment.color = "black",
         size = 5,
         show.legend = FALSE
       ) +
-      scale_color_manual(values=NY_region_palette, aesthetics = c("fill", "box.padding")) +
+      scale_color_manual(values=NY_region_palette, aesthetics = c("color", "box.padding")) +
       coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = FALSE) +
       geom_vline(aes(xintercept=as_datetime("2020-03-20"), linetype="Gov. Cuomo issues stay-at-home order"), color = "black") + 
       geom_vline(aes(xintercept=as_datetime("2020-05-15"), linetype="Gov. Cuomo issues Phase 1 Reopening (5 Regions)"), color = "blue") + 
@@ -1501,14 +1499,13 @@ server <- function(input, output, session) {
       geom_line(size=select.size) + 
       geom_label_repel(
         data=highlight_points,  
-        aes(label=County,fill=Region), 
+        aes(label=County), 
         box.padding = unit(1.75, 'lines'),
-        color = "black",
         segment.color = "black",
         size = 5,
         show.legend = FALSE
       ) +
-      scale_color_manual(values=NY_region_palette, aesthetics = c("fill", "box.padding")) +
+      scale_color_manual(values=NY_region_palette, aesthetics = c("color", "box.padding")) +
       coord_cartesian(xlim = ranges$x, ylim = ranges$y, expand = FALSE) +
       geom_vline(aes(xintercept=as_datetime("2020-03-20"), linetype="Gov. Cuomo issues stay-at-home order"), color = "black") + 
       geom_vline(aes(xintercept=as_datetime("2020-05-15"), linetype="Gov. Cuomo issues Phase 1 Reopening (5 Regions)"), color = "blue") + 

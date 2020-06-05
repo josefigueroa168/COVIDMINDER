@@ -1,65 +1,65 @@
 County,Region,Color
-New York State,New York State,#7a7a7a
-Albany,Capital,#00ffff
-Allegany,Western New York,#979797
-Bronx,New York City,#c8ff00
-Broome,Southern Tier,#ffd900
-Cattaraugus,Western New York,#979797
-Cayuga,Central New York,#d7e1be
-Chautauqua,Western New York,#979797
-Chemung,Finger Lakes,#b4ffaa
-Chenango,Southern Tier,#ffd900
-Clinton,North Country,#dcc8dc
-Columbia,Capital,#00ffff
-Cortland,Central New York,#d7e1be
-Delaware,Southern Tier,#ffd900
-Dutchess,Mid-Hudson,#91bdf0
-Erie,Western New York,#979797
-Essex,North Country,#dcc8dc
-Franklin,North Country,#dcc8dc
-Fulton,Mohawk Valley,#ffff00
-Genesee,Western New York,#979797
-Greene,Capital,#00ffff
-Hamilton,North Country,#dcc8dc
-Herkimer,Mohawk Valley,#ffff00
-Jefferson,Tug Hill Seaway,#e978ef
-Kings,New York City,#c8ff00
-Lewis,Tug Hill Seaway,#e978ef
-Livingston,Finger Lakes,#b4ffaa
-Madison,Central New York,#d7e1be
-Manhattan,New York City,#c8ff00
-Monroe,Finger Lakes,#b4ffaa
-Montgomery,Mohawk Valley,#ffff00
-Nassau,Long Island,#ff64a5
-New York,New York City,#c8ff00
-Niagara,Western New York,#979797
-Oneida,Central New York,#d7e1be
-Onondaga,Central New York,#d7e1be
-Ontario,Finger Lakes,#b4ffaa
-Orange,Mid-Hudson,#91bdf0
-Orleans,Western New York,#979797
-Oswego,Central New York,#d7e1be
-Otsego,Mohawk Valley,#ffff00
-Putnam,Mid-Hudson,#91bdf0
-Queens,New York City,#c8ff00
-Rensselaer,Capital,#00ffff
-Richmond,New York City,#c8ff00
-Rockland,Mid-Hudson,#91bdf0
-St. Lawrence,Tug Hill Seaway,#e978ef
-Saratoga,Capital,#00ffff
-Schenectady,Capital,#00ffff
-Schoharie,Mohawk Valley,#ffff00
-Schuyler,Finger Lakes,#b4ffaa
-Seneca,Finger Lakes,#b4ffaa
-Steuben,Finger Lakes,#b4ffaa
-Suffolk,Long Island,#ff64a5
-Sullivan,Mid-Hudson,#91bdf0
-Tioga,Southern Tier,#ffd900
-Tompkins,Southern Tier,#ffd900
-Ulster,Mid-Hudson,#91bdf0
-Warren,North Country,#dcc8dc
-Washington,North Country,#dcc8dc
-Wayne,Finger Lakes,#b4ffaa
-Westchester,Mid-Hudson,#91bdf0
-Wyoming,Western New York,#979797
-Yates,Finger Lakes,#b4ffaa
+New York State,New York State,black
+Albany,Capital,#A7B0C8
+Allegany,Western New York,#A5CDB5
+Bronx,New York City,#A8A8A8
+Broome,Southern Tier,#4E729C
+Cattaraugus,Western New York,#A5CDB5
+Cayuga,Central New York,#48818B
+Chautauqua,Western New York,#A5CDB5
+Chemung,Finger Lakes,#CA8874
+Chenango,Southern Tier,#4E729C
+Clinton,North Country,#7A9C6C
+Columbia,Capital,#A7B0C8
+Cortland,Central New York,#48818B
+Delaware,Southern Tier,#4E729C
+Dutchess,Mid-Hudson,#E3BDAF
+Erie,Western New York,#A5CDB5
+Essex,North Country,#7A9C6C
+Franklin,North Country,#7A9C6C
+Fulton,Mohawk Valley,#48818B
+Genesee,Western New York,#A5CDB5
+Greene,Capital,#A7B0C8
+Hamilton,North Country,#7A9C6C
+Herkimer,Mohawk Valley,#48818B
+Jefferson,Tug Hill Seaway,#B38199
+Kings,New York City,#A8A8A8
+Lewis,Tug Hill Seaway,#B38199
+Livingston,Finger Lakes,#CA8874
+Madison,Central New York,#48818B
+Manhattan,New York City,#A8A8A8
+Monroe,Finger Lakes,#CA8874
+Montgomery,Mohawk Valley,#48818B
+Nassau,Long Island,#C8B562
+New York,New York City,#A8A8A8
+Niagara,Western New York,#A5CDB5
+Oneida,Central New York,#48818B
+Onondaga,Central New York,#48818B
+Ontario,Finger Lakes,#CA8874
+Orange,Mid-Hudson,#E3BDAF
+Orleans,Western New York,#A5CDB5
+Oswego,Central New York,#48818B
+Otsego,Mohawk Valley,#48818B
+Putnam,Mid-Hudson,#E3BDAF
+Queens,New York City,#A8A8A8
+Rensselaer,Capital,#A7B0C8
+Richmond,New York City,#A8A8A8
+Rockland,Mid-Hudson,#E3BDAF
+St. Lawrence,Tug Hill Seaway,#B38199
+Saratoga,Capital,#A7B0C8
+Schenectady,Capital,#A7B0C8
+Schoharie,Mohawk Valley,#48818B
+Schuyler,Finger Lakes,#CA8874
+Seneca,Finger Lakes,#CA8874
+Steuben,Finger Lakes,#CA8874
+Suffolk,Long Island,#C8B562
+Sullivan,Mid-Hudson,#E3BDAF
+Tioga,Southern Tier,#4E729C
+Tompkins,Southern Tier,#4E729C
+Ulster,Mid-Hudson,#E3BDAF
+Warren,North Country,#7A9C6C
+Washington,North Country,#7A9C6C
+Wayne,Finger Lakes,#CA8874
+Westchester,Mid-Hudson,#E3BDAF
+Wyoming,Western New York,#A5CDB5
+Yates,Finger Lakes,#CA8874

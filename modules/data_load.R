@@ -138,3 +138,6 @@ covid_TS_counties_long.cases <- read_csv("data/csv/time_series/covid_TS_counties
 covid_TS_state_long.cases <- read_csv("data/csv/time_series/covid_TS_state_long.cases.csv")
 covid_TS_US_long.cases <- read_csv("data/csv/time_series/covid_TS_US_long.cases.csv")
 
+covid_TS_counties_long.pred <- read_csv("data/csv/time_series/covid_TS_counties_long.pred.csv")
+covid_TS_state_long.pred <- read_csv("data/csv/time_series/covid_TS_state_long.pred.csv")
+covid_TS_US_long.pred <- read_csv("data/csv/time_series/covid_TS_US_long.pred.csv")

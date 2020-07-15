@@ -1,6 +1,5 @@
 #### Library and Data Imports ####
 source("modules/Source.R")
-source("modules/stub_prediction.R")
 source("modules/data_load.R")
 source("modules/preprocessing.R")
 source("modules/ggplot_gen.R")
@@ -2734,7 +2733,7 @@ server <- function(input, output, session) {
   output$state.CoT <- renderPlot({
     state_name <- input$state_name
     state_initial <- state.abr[state.abr$name == state_name, "abr"]
-    ggbar.overall(state_initial, y.value = "p_cases", remove.title = T) + 
+    ggbar.overall(state_initial, y.value = "p_cases", remove.title = T, cur_date = update_date) + 
       #geom_vline(xintercept=reactive.line$x, color= "black", linetype="solid", size = 1, show.legend = F) +
       NULL
   }, alt = "A time series bar plot representing the states COVID-19 cases over time, per 100k.")
@@ -2749,7 +2748,7 @@ server <- function(input, output, session) {
       state_name <- input$state_name
       state_initial <- state.abr[state.abr$name == state_name, "abr"]
       ggsave(filename = file, 
-             plot = ggbar.overall(state_initial, y.value = "p_cases", remove.title = F, date = update_date) + NULL,
+             plot = ggbar.overall(state_initial, y.value = "p_cases", remove.title = F, cur_date = update_date) + NULL,
              device = "png",
              width = 12,
              height = 8,
@@ -2767,7 +2766,7 @@ server <- function(input, output, session) {
       state_name <- input$state_name
       state_initial <- state.abr[state.abr$name == state_name, "abr"]
       ggsave(filename = file, 
-             plot = ggbar.overall(state_initial, y.value = "p_deaths", remove.title = F, date = update_date) + NULL,
+             plot = ggbar.overall(state_initial, y.value = "p_deaths", remove.title = F, cur_date = update_date) + NULL,
              device = "png",
              width = 12,
              height = 8,
@@ -2778,7 +2777,7 @@ server <- function(input, output, session) {
   output$state.DoT <- renderPlot({
     state_name <- input$state_name
     state_initial <- state.abr[state.abr$name == state_name, "abr"]
-    ggbar.overall(state_initial, y.value = "p_deaths", remove.title = T)
+    ggbar.overall(state_initial, y.value = "p_deaths", remove.title = T, cur_date = update_date)
   }, alt = "A time series bar plot representing the states COVID-19 deaths over time, per 100k.")
   
   Tr.ranges <- reactiveValues(x = NULL, y = NULL)
@@ -2808,7 +2807,7 @@ server <- function(input, output, session) {
       y.value = "p_diff"
     }
     
-    ggplot.state(state_initial, y.value = y.value, counties = counties,remove.title = T) +
+    ggplot.state(state_initial, y.value = y.value, counties = counties,remove.title = T, cur_date = update_date) +
       coord_cartesian(xlim = Tr.ranges$x, ylim = Tr.ranges$y) +
       NULL
   }, alt = "A time series bar plot representing the states new COVID-19 cases over time")
@@ -2835,7 +2834,7 @@ server <- function(input, output, session) {
                                  y.value = y.value, 
                                  counties = counties,
                                  remove.title = F, 
-                                 date = update_date) + 
+                                 cur_date = update_date) + 
                coord_cartesian(xlim = Tr.ranges$x, ylim = Tr.ranges$y) +
                NULL,
              device = "png",
@@ -3073,7 +3072,7 @@ server <- function(input, output, session) {
   })
   
   output$US.CoT <- renderPlot({
-    ggbar.US(y.value = "cases", remove.title = T)
+    ggbar.US(y.value = "cases", remove.title = T, cur_date = update_date)
   }, alt = "A time series bar plot representing United States cumilative COVID-19 cases over time.")
   
   output$US.CoT.dl <- downloadHandler(
@@ -3082,7 +3081,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       ggsave(filename = file, 
-             plot = ggbar.US(y.value = "cases", remove.title = F, date = update_date) + NULL,
+             plot = ggbar.US(y.value = "cases", remove.title = F, cur_date = update_date) + NULL,
              device = "png",
              width = 12,
              height = 8,
@@ -3091,7 +3090,7 @@ server <- function(input, output, session) {
   )
   
   output$US.DoT <- renderPlot({
-    ggbar.US(y.value = "deaths", remove.title = T)
+    ggbar.US(y.value = "deaths", remove.title = T, cur_date = update_date)
   }, alt = "A time series bar plot representing United States cumilative COVID-19 deaths over time.")
   
   output$US.DoT.dl <- downloadHandler(
@@ -3100,7 +3099,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       ggsave(filename = file, 
-             plot = ggbar.US(y.value = "deaths", remove.title = F, date = update_date) + NULL,
+             plot = ggbar.US(y.value = "deaths", remove.title = F, cur_date = update_date) + NULL,
              device = "png",
              width = 12,
              height = 8,
@@ -3121,7 +3120,7 @@ server <- function(input, output, session) {
       y.value = "p_diff"
     }
     
-    ggplot.US(y.value=y.value, moving.avg.window=7, selected.states=selected.states$abr, remove.title=T) +
+    ggplot.US(y.value=y.value, moving.avg.window=7, selected.states=selected.states$abr, remove.title=T, cur_date = update_date) +
       coord_cartesian(xlim = Tr.ranges$x, ylim = Tr.ranges$y) +
       NULL
   }, alt = "A time series plot representing United States new COVID-19 cases over time, broken down by state.")
@@ -3147,7 +3146,7 @@ server <- function(input, output, session) {
                               moving.avg.window=7, 
                               selected.states=selected.states$abr, 
                               remove.title=F,
-                              date = update_date) +
+                              cur_date = update_date) +
                coord_cartesian(xlim = Tr.ranges$x, ylim = Tr.ranges$y) +
                NULL,
              device = "png",

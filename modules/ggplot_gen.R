@@ -80,7 +80,7 @@ ggplot.state <- function(selected.state = "NY",
                          moving.avg.window=7, 
                          counties = c(), 
                          remove.title = F,
-                         date = "",
+                         cur_date = "",
                          max.labels=10 # To be implimented
                          ){
   
@@ -95,11 +95,12 @@ ggplot.state <- function(selected.state = "NY",
     gg_title <- NULL
   }
   else {
-    gg_title <- ggtitle(paste0(state.name, " ", y_label, " ",m.a.w, " [", date, "]"))
+    gg_title <- ggtitle(paste0(state.name, " ", y_label, " ",m.a.w, " [", cur_date, "]"))
   }
   
   
   covid_TS_counties.cases.plot <- covid_TS_counties_long.cases %>%
+    rbind.data.frame(covid_TS_counties_long.pred) %>%
     select(-c(countyFIPS, stateFIPS)) %>%
     filter(State == selected.state) %>%
     group_by(County) %>% 
@@ -208,9 +209,10 @@ ggplot.state <- function(selected.state = "NY",
     scale_color_manual(values=region_palette, aesthetics = c("fill")) +
     geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$END_STHM, linetype=paste0(selected.state," ends stay at home order")), color = "red") + 
     geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$STAYHOME, linetype=paste0(selected.state," begins stay at home order")), color = "blue") + 
+    geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype=paste0("Predictions Split")), color = "green") + 
     scale_linetype_manual(name = "Events", 
-                          values = c(2,2), 
-                          guide = guide_legend(title.position = "top",title.hjust = 0.5,override.aes = list(color = c("blue", "red")), direction = "vertical")) +
+                          values = c(2,2,2), 
+                          guide = guide_legend(title.position = "top",title.hjust = 0.5,override.aes = list(color = c("blue", "red", "green")), direction = "vertical")) +
     theme(legend.position = "bottom", 
           title = element_text(hjust = 0.5, size = 18),
           axis.title.x = element_text(size = 16, lineheight = 24),
@@ -227,8 +229,9 @@ ggbar.overall <- function(selected.state = "NY",
                           y.value="p_cases", 
                           moving.avg.window=14, 
                           remove.title = F,
-                          date = "") {
+                          cur_date = "") {
   state <- covid_TS_state_long.cases %>%
+    rbind.data.frame(covid_TS_state_long.pred) %>%
     filter(State == selected.state)
   
   my_diff <- get_dif(y.value)
@@ -238,7 +241,7 @@ ggbar.overall <- function(selected.state = "NY",
     gg_title <- NULL
   }
   else {
-    gg_title <- ggtitle(paste0(selected.state, " ", category, " Over Time (", date,")"))
+    gg_title <- ggtitle(paste0(selected.state, " ", category, " Over Time (", cur_date,")"))
   }
   
   
@@ -294,9 +297,10 @@ ggbar.overall <- function(selected.state = "NY",
            geom_line(data = state.us.ma,aes( x=date, y=ma, color=Type, group=Type), arrow=arrow(ends="last"), show.legend = F)  + 
            geom_line(data = state.us.ma,aes( x=date, y=ma, color=Type, group=Type)) +
            geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$END_STHM, color = END_STHM), linetype="longdash", size = 1, show.legend = F) +
-           geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$STAYHOME, color= STHM), linetype="longdash", size = 1, show.legend = F) +
+           geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$STAYHOME, color = STHM), linetype="longdash", size = 1, show.legend = F) +
+           geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), color = "Predictions Split"), linetype="longdash", size = 1, show.legend = F) + 
            scale_color_manual(name = "Line Types", 
-                              values = c("blue", "red", "black", "steelblue"),
+                              values = c("blue", "red", "black", "steelblue", "green"),
                               guide = guide_legend(title.position = "top",
                                                    title.hjust = 0.5,
                                                    direction = "vertical")) +
@@ -324,7 +328,7 @@ ggbar.overall <- function(selected.state = "NY",
 ggbar.US <- function(y.value="cases", 
                      moving.avg.window=14, 
                      remove.title = F,
-                     date = "") {
+                     cur_date = "") {
   my_diff <- get_dif(y.value)
   category <- get_y_label(y.value)
   
@@ -332,11 +336,12 @@ ggbar.US <- function(y.value="cases",
     gg_title <- NULL
   }
   else {
-    gg_title <- ggtitle(paste0("United States ", category, " over time (",date,")"))
+    gg_title <- ggtitle(paste0("United States ", category, " over time (",cur_date,")"))
   }
   
   
   US.ma <- covid_TS_US_long.cases %>%
+    rbind.data.frame(covid_TS_US_long.pred) %>%
     rename(Values = all_of(y.value)) %>%
     rename(my_diff = all_of(my_diff)) %>%
     mutate(diff.ma =  c(my_diff[1:7-1], zoo::rollmean(my_diff, 7, align="right"))) %>%
@@ -371,6 +376,7 @@ ggbar.US <- function(y.value="cases",
                                     title.hjust = 0.5)) +
            geom_line(aes(x=date, y=ma), color="black", arrow=arrow(ends="last"), show.legend = F)  + 
            geom_line(aes( x=date, y=ma, linetype=Type), color="black") +
+           geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype = "Predictions Split"), color="green") + 
            guides(linetype = guide_legend(title = "Line Type",
                                           title.position = "top",
                                           title.hjust = 0.5)) +
@@ -397,7 +403,7 @@ ggplot.US <- function(y.value="cases",
                       moving.avg.window=7,
                       selected.states = c(), 
                       remove.title = F, 
-                      date = "",
+                      cur_date = "",
                       max.labels=10) {
   
   y_label <- get_y_label(y.value)
@@ -410,11 +416,12 @@ ggplot.US <- function(y.value="cases",
     gg_title <- NULL
   }
   else {
-    gg_title <- ggtitle(paste0("United States ", y_label, " ",m.a.w, " [",date,"]"))
+    gg_title <- ggtitle(paste0("United States ", y_label, " ",m.a.w, " [",cur_date,"]"))
   }
   
   
   covid_TS_state.cases.plot <- covid_TS_state_long.cases %>%
+    rbind.data.frame(covid_TS_state_long.pred) %>%
     select(-c(population)) %>%
     filter(State %in% selected.states) %>%
     group_by(State) %>% 
@@ -424,6 +431,7 @@ ggplot.US <- function(y.value="cases",
     ungroup()
   
   US <- covid_TS_US_long.cases %>%
+    rbind.data.frame(covid_TS_US_long.pred) %>%
     mutate(diff = c(numeric(moving.avg.window-1), zoo::rollmean(diff, moving.avg.window, align = "right"))) %>%
     mutate(p_diff = c(numeric(moving.avg.window-1), zoo::rollmean(p_diff, moving.avg.window, align = "right")))
   
@@ -503,6 +511,7 @@ ggplot.US <- function(y.value="cases",
     scale_color_manual(values=region_palette, aesthetics = c("color")) +
     guides(color = guide_legend(title = "Region",
                                 title.position = "left")) +
+    geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype = "Predictions Split"), color="green") + 
     theme(legend.position = "bottom", 
           title = element_text(hjust = 0.5, size = 18),
           axis.title.x = element_text(size = 16, lineheight = 24),

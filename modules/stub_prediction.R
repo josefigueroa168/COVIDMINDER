@@ -12,10 +12,11 @@ covid_TS_counties_long.pred <- covid_TS_counties_long.cases %>%
   slice(rep(1:n(), each = 7)) %>%
   mutate(row_num = row_number()) %>%
   mutate(date = date + row_num*86400) %>%
+  mutate(cases = cases + row_num*diff) %>%
+  mutate(deaths = deaths + row_num*d_diff) %>%
+  mutate(p_cases = p_cases + row_num*p_diff) %>%
+  mutate(p_deaths = p_deaths + row_num*p.d_diff) %>%
   select(-row_num)
-
-covid_TS_counties_long.cases <- covid_TS_counties_long.cases %>%
-  rbind.data.frame(covid_TS_counties_long.pred)
 
 # States
 covid_TS_state_long.pred <- covid_TS_state_long.cases %>%
@@ -24,10 +25,11 @@ covid_TS_state_long.pred <- covid_TS_state_long.cases %>%
   slice(rep(1:n(), each = 7)) %>%
   mutate(row_num = row_number()) %>%
   mutate(date = date + row_num*86400) %>%
+  mutate(cases = cases + row_num*diff) %>%
+  mutate(deaths = deaths + row_num*d_diff) %>%
+  mutate(p_cases = p_cases + row_num*p_diff) %>%
+  mutate(p_deaths = p_deaths + row_num*p.d_diff) %>%
   select(-row_num)
-
-covid_TS_state_long.cases <- covid_TS_state_long.cases %>%
-  rbind.data.frame(covid_TS_state_long.pred)
 
 # National
 covid_TS_US_long.pred <- covid_TS_US_long.cases %>%
@@ -35,11 +37,12 @@ covid_TS_US_long.pred <- covid_TS_US_long.cases %>%
   slice(rep(1:n(), each = 7)) %>%
   mutate(row_num = row_number()) %>%
   mutate(date = date + row_num*86400) %>%
+  mutate(cases = cases + row_num*diff) %>%
+  mutate(deaths = deaths + row_num*d_diff) %>%
+  mutate(p_cases = p_cases + row_num*p_diff) %>%
+  mutate(p_deaths = p_deaths + row_num*p.d_diff) %>%
   select(-row_num)
 
-covid_TS_US_long.cases <- covid_TS_US_long.cases %>%
-  rbind.data.frame(covid_TS_US_long.pred)
-
-write.csv(covid_TS_counties_long.cases, "data/csv/time_series/covid_TS_counties_long.cases.csv")
-write.csv(covid_TS_state_long.cases, "data/csv/time_series/covid_TS_state_long.cases.csv")
-write.csv(covid_TS_US_long.cases, "data/csv/time_series/covid_TS_US_long.cases.csv")
+write_csv(covid_TS_counties_long.pred, "data/csv/time_series/covid_TS_counties_long.pred.csv")
+write_csv(covid_TS_state_long.pred, "data/csv/time_series/covid_TS_state_long.pred.csv")
+write_csv(covid_TS_US_long.pred, "data/csv/time_series/covid_TS_US_long.pred.csv")

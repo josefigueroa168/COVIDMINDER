@@ -9,7 +9,7 @@ source("modules/gt_gen.R")
 sourceDir("modules/shiny/R")
 
 
-update_date <- "07-12-2020" # makes it easy to change all occurances when we update
+update_date <- "07-15-2020" # makes it easy to change all occurances when we update
 
 moving.avg.window <- 7 # WARNING: Behavior for moving.avg.window > number of report dates for a region is undefined.
                        # (i.e. a 20 day window if Catskill Region has 19 report dates.)
@@ -19,12 +19,14 @@ height <- "600px"# plot heights
 # TODO: Implement other text as strings like this...
 rpi_accessibility_link <- "<div class='center'><p><a href='https://info.rpi.edu/statement-of-accessibility'>Rensselaer Statement of Accessibility</a></p></div>"
 
-footer_text <- "<p>COVID<b>MINDER</b> analysis and visualizations</b> by students and staff
+
+footer_text <- "<p>COVID<b>MINDER</b> analysis and visualizations</b> are by students and staff
                                 of <a href='http://idea.rpi.edu/'>The Rensselaer Institute for Data Exploration 
-                                and Applications</a> at <a href='http://rpi.edu/'>Rensselaer Polytechnic Institute</a>. 
-                                <b>COVIDMINDER</b> is an open source project implemented on the <a href='https://shiny.rstudio.com/'>R Shiny platform</a>;
+                                and Applications</a> at <a href='http://rpi.edu/'>Rensselaer Polytechnic Institute</a> 
+                                with generous support from the United Health Foundation. COVID<b>MINDER</b> is an open 
+                                source project implemented on the <a href='https://shiny.rstudio.com/'>R Shiny platform</a>;
                                 see the <a href='https://github.com/TheRensselaerIDEA/COVIDMINDER'>COVIDMINDER github</a>
-                                for more information. <br><br>
+                                for more information. COVID<b>MINDER</b> was directed by Kristin P. Bennett and John S. Erickson.<br><br>
                                 <img src='comment.png' alt = 'Small text bubble icon' style='float:left;width:40px;margin-right:5px;' >
                                 Thanks for using <b>COVIDMINDER!</b> Please take a few moments 
                                 to fill out our short <a href='https://forms.gle/8LwiYAVXXN7mu9wR6'>comments form.</a></p><br><br>
@@ -52,8 +54,7 @@ url1 <- url2 <- ""
 #### UI Code ####
 ui <- 
   tagList(
-    tags$html(lang = "en"),
-    tags$head(tags$title("COVIDMINDER: Where you live matters")),
+    tags$html(lang = "en-us"),
     tags$head(includeHTML("www/analytics.html")),
     navbarPage(
       id="tab",
@@ -64,6 +65,7 @@ ui <-
                    href = "/",
                    img(class="logo", src="Rensselaer_round.png", alt="Small Rensselaer Polytechnic Institute Logo"),
                    HTML("COVID<b>MINDER</b>")),
+      windowTitle = "COVIDMINDER: Where you live matters",
       tabPanel(title = HTML("<div><b>STATE REPORT CARDS</b></div>"),
                value = "state_report_cards",
                   fluidPage(
@@ -87,7 +89,7 @@ ui <-
                                                                  delay = 100,
                                                                  delayType = "throttle")),
                                     uiOutput("state.CoT.tooltip")),
-                             column(1, downloadButton("state.CoT.dl"),offset = 9),
+                             column(1, downloadButton("state.CoT.dl", label="Download Case Barplot"),offset = 9),
                              column(12, style="text-align:center;position:relative;",uiOutput("state.DoT.title"),
                                     plotOutput(outputId = "state.DoT", 
                                                height = height, 
@@ -95,7 +97,7 @@ ui <-
                                                                  delay = 100,
                                                                  delayType = "throttle")),
                                     uiOutput("state.DoT.tooltip"))),
-                             column(1, downloadButton("state.DoT.dl"), offset = 9),
+                             column(1, downloadButton("state.DoT.dl", label="Download Mortality Barplot"), offset = 9),
                     fluidRow(column(8, style="text-align:center;",
                                     tags$h2("Flattening the Curve"),
                                     tags$p("Nationwide, states have taken various approaches to mitigate the spread of coronavirus, such as social distancing interventions and encouraging mask use where social distancing is not possible. Studies by the CDC have shown these methods reduce new COVID-19 cases, hospitalizations, and deaths."),
@@ -123,7 +125,7 @@ ui <-
                                                  id = "trends.brush",
                                                  resetOnNew = TRUE)),
                                     uiOutput("state.trends.tooltip"))),
-                             column(1, downloadButton("state.trends.dl"), offset = 9),
+                             column(1, downloadButton("state.trends.dl", label="Download Case Trends Plot"), offset = 9),
                     tags$br(),
                     fluidRow(column(6, style="text-align:center;",
                                     tags$div(class = "info",
@@ -147,7 +149,7 @@ ui <-
                                                  selected = "Daily",
                                                  inline = T),
                                     leafletOutput("map.cases", height = height),
-                                    column(2, downloadButton("map.cases.dl"), offset=10)),
+                                    column(2, downloadButton("map.cases.dl", label="Download Case Map"), offset=6)),
                              column(6,
                                     tags$div(style = "text-align:center;",uiOutput("state.county.deaths")),
                                     radioButtons(inputId = "SRC.death.time",
@@ -156,7 +158,7 @@ ui <-
                                                  selected = "Daily",
                                                  inline = T),
                                     leafletOutput("map.deaths", height = height),
-                                    column(2, downloadButton("map.deaths.dl"), offset = 10))),
+                                    column(2, downloadButton("map.deaths.dl", label="Download Mortality Map"), offset = 6))),
                     tags$br(),
                     fluidRow(column(12, style="text-align:center;",
                                     tags$h1("Comorbidities"))),
@@ -169,7 +171,7 @@ ui <-
                                                 choices = c("Diabetes", "Obesity", "CRD Mortality"),
                                                 selected = "Diabetes"),
                                     leafletOutput("maps.determinant", height = height),
-                                    column(2, downloadButton("map.determinant.dl"), offset = 10), offset = 3),
+                                    column(2, downloadButton("map.determinant.dl", label="Download Determinant Map"), offset = 6), offset = 3),
                              column(8, style="text-align:center;",
                                     tags$p(textOutput("determinant.text"),
                                            tags$br(),
@@ -216,7 +218,7 @@ ui <-
                                                            delay = 100,
                                                            delayType = "throttle")),
                                uiOutput("US.CoT.tooltip"), offset = 1),
-                        column(1, downloadButton("US.CoT.dl"),offset = 9),
+                        column(1, downloadButton("US.CoT.dl", label="Download Case Barplot"),offset = 9),
                         column(10, style="text-align:center;position:relative;",
                                tags$h2("United States COVID-19 Mortality Curve"),
                                tags$h3("How have United States overall COVID-19 deaths changed over time?"),
@@ -226,7 +228,7 @@ ui <-
                                                             delay = 100,
                                                             delayType = "throttle")),
                                uiOutput("US.DoT.tooltip"), offset = 1),
-                        column(1, downloadButton("US.DoT.dl"),offset = 9)),
+                        column(1, downloadButton("US.DoT.dl", label="Download Mortality Barplot"),offset = 9)),
                fluidRow(column(8, style="text-align:center;",
                                tags$h2("Flattening the Curve"),
                                tags$p("Nationwide, states have taken various approaches to mitigate the spread of coronavirus, such as social distancing interventions and encouraging mask use where social distancing is not possible. Studies by the CDC have shown these methods reduce new COVID-19 cases, hospitalizations, and deaths."),
@@ -254,7 +256,7 @@ ui <-
                                             id = "trends.brush",
                                             resetOnNew = TRUE)),
                                uiOutput("US.trends.tooltip"), offset = 1),
-                        column(1, downloadButton("US.trends.dl"), offset = 9)),
+                        column(1, downloadButton("US.trends.dl", label="Download Case Trend Plot"), offset = 9)),
                tags$br(),
                fluidRow(column(4, style="text-align:center;",
                                tags$div(class = "info",
@@ -279,7 +281,7 @@ ui <-
                                             selected = "Daily",
                                             inline = T),
                                leafletOutput("US.map.cases", height = height),
-                               column(2, downloadButton("US.map.cases.dl"), offset=10)),
+                               column(2, downloadButton("US.map.cases.dl", label="Download Case Map"), offset=6)),
                         column(6,
                                tags$h2(style="text-align:center;", "US COVID-19 Mortality Hotspots"),
                                tags$h3(style="text-align:center;", paste0("What are the Nationwide disparities in Daily Mortality Rates? (",time.period, " day average)")),
@@ -289,12 +291,12 @@ ui <-
                                             selected = "Daily",
                                             inline = T),
                                leafletOutput("US.map.deaths", height = height),
-                               column(2, downloadButton("US.map.deaths.dl"), offset = 10)),
+                               column(2, downloadButton("US.map.deaths.dl", label="Download Mortality Map"), offset = 6)),
                         column(6,
                                tags$h2(style="text-align:center;", "US COVID-19 Testing Disparities"),
                                tags$h3(style="text-align:center;", "What are the Nationwide disparities in COVID-19 Testing?"),
                                leafletOutput("US.map.testing", height = height), 
-                               column(2, downloadButton("US.maps.testing.dl"), offset = 10), offset = 3
+                               column(2, downloadButton("US.maps.testing.dl", label="Download Testing Map"), offset = 6), offset = 3
                                )),
                tags$br(),
                fluidRow(column(12, style="text-align:center;",
@@ -306,7 +308,7 @@ ui <-
                                            choices = c("Diabetes", "Obesity", "CRD Mortality", "Heart Disease Mortality"),
                                            selected = "Diabetes"),
                                leafletOutput("US.maps.determinant", height = height),
-                               column(2, downloadButton("US.maps.determinant.dl"), offset = 10), offset = 3),
+                               column(2, downloadButton("US.maps.determinant.dl", label="Download Determinant Map"), offset = 6), offset = 3),
                         column(8, style="text-align:center;",
                                tags$p(textOutput("US.determinant.text"),
                                       tags$br(),
@@ -2749,8 +2751,8 @@ server <- function(input, output, session) {
       ggsave(filename = file, 
              plot = ggbar.overall(state_initial, y.value = "p_cases", remove.title = F, date = update_date) + NULL,
              device = "png",
-             width = 8,
-             height = 6,
+             width = 12,
+             height = 8,
              units = "in")
     }
   )
@@ -2767,8 +2769,8 @@ server <- function(input, output, session) {
       ggsave(filename = file, 
              plot = ggbar.overall(state_initial, y.value = "p_deaths", remove.title = F, date = update_date) + NULL,
              device = "png",
-             width = 8,
-             height = 6,
+             width = 12,
+             height = 8,
              units = "in")
     }
   )
@@ -2837,8 +2839,8 @@ server <- function(input, output, session) {
                coord_cartesian(xlim = Tr.ranges$x, ylim = Tr.ranges$y) +
                NULL,
              device = "png",
-             width = 8,
-             height = 6,
+             width = 12,
+             height = 8,
              units = "in")
     }
   )
@@ -2937,7 +2939,7 @@ server <- function(input, output, session) {
   })
   
   output$US.map.testing <- renderLeaflet({
-    geo.plot("US", "Testing", reverse = T)
+    geo.plot("US", "Daily Testing", reverse = T)
   })
   
   output$US.maps.testing.dl <- downloadHandler(
@@ -2945,17 +2947,18 @@ server <- function(input, output, session) {
       return("US_mortality.png")
     },
     content = function(file) {
-      title <- tags$h2(style="text-align:center;", "US COVID-19 Mortality Hotspots")
-      time <- input$NRC.deaths.time
-      if (time == "Daily") {
-        param <- "Daily Mortality"
-      }
-      else {
-        param <- "Mortality"
-      }
+      title <- tags$h2(style="text-align:center;", "US COVID-19 Testing Disparities")
+      #time <- input$NRC.deaths.time
+      #if (time == "Daily") {
+      #  param <- "Daily Mortality"
+      #}
+      #else {
+      #  param <- "Mortality"
+      #}
       mapshot(x = geo.plot("US", 
-                           param, 
-                           title = tags$div(title)
+                           "Daily Testing", 
+                           title = tags$div(title),
+                           reverse = T
       ),
       file = file,
       cliprect = "viewport",
@@ -3081,8 +3084,8 @@ server <- function(input, output, session) {
       ggsave(filename = file, 
              plot = ggbar.US(y.value = "cases", remove.title = F, date = update_date) + NULL,
              device = "png",
-             width = 8,
-             height = 6,
+             width = 12,
+             height = 8,
              units = "in")
     }
   )
@@ -3099,8 +3102,8 @@ server <- function(input, output, session) {
       ggsave(filename = file, 
              plot = ggbar.US(y.value = "deaths", remove.title = F, date = update_date) + NULL,
              device = "png",
-             width = 8,
-             height = 6,
+             width = 12,
+             height = 8,
              units = "in")
     }
   )
@@ -3148,8 +3151,8 @@ server <- function(input, output, session) {
                coord_cartesian(xlim = Tr.ranges$x, ylim = Tr.ranges$y) +
                NULL,
              device = "png",
-             width = 8,
-             height = 6,
+             width = 12,
+             height = 8,
              units = "in")
     }
   )
@@ -3236,23 +3239,8 @@ server <- function(input, output, session) {
     # if the tab variable is defined, send a message to client to update the tab
     if (any(sapply(data[c("state_report_cards",
                           "national_report_card",
-                          'outcome_usa_mortality', 
-                          'outcome_usa_racial_disparity',
-                          'outcome_state_mortality',
-                          'outcome_state_cases', 
-                          'outcome_ny_racial_disparity',
-                          'outcome_ct_racial_disparity',
-                          'outcome_ny_new_cases',
-                          #'outcome_ny_cases_rate',
-                          #'outcome_ny_cases_rate_regions',
-                          'outcome_ny_cases_time',
-                          'outcome_ny_cases_time_region',
-                          'mediation_usa_testing',
-                          'mediation_usa_hospital_beds',
                           'determinant_disclaimer',
-                          'determinant_usa',
-                          #'determinant_usa_obesity',
-                          'determinant_ny'
+                          'about'
     )], 
     Negate(is.null)))) {
       # browser()

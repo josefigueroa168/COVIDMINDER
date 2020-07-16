@@ -139,6 +139,7 @@ ggplot.state <- function(selected.state = "NY",
   }
   
   state <- covid_TS_state_long.cases %>%
+    rbind.data.frame(covid_TS_state_long.pred) %>%
     filter(State == selected.state) %>%
     filter(n() >= moving.avg.window) %>%
     mutate(diff = c(numeric(moving.avg.window-1), zoo::rollmean(diff, moving.avg.window, align = "right"))) %>%
@@ -178,6 +179,9 @@ ggplot.state <- function(selected.state = "NY",
   
   region_palette <- setNames(as.character(county.num$Color), as.character(county.num$County))
   region_palette[selected.state] <- "#A8A8A8"
+  END_STHM <- paste0(selected.state," ends stay at home order")
+  STHM <- paste0(selected.state," begins stay at home order")
+  PRED_SPLIT <- paste0("Predictions Split")
   
   g <- covid_TS_counties.cases.plot %>%
     ggplot(aes_string(
@@ -207,11 +211,11 @@ ggplot.state <- function(selected.state = "NY",
       show.legend = FALSE
     ) +
     scale_color_manual(values=region_palette, aesthetics = c("fill")) +
-    geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$END_STHM, linetype=paste0(selected.state," ends stay at home order")), color = "red") + 
-    geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$STAYHOME, linetype=paste0(selected.state," begins stay at home order")), color = "blue") + 
-    geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype=paste0("Predictions Split")), color = "green") + 
+    geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$END_STHM, linetype=END_STHM), color = "red") + 
+    geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$STAYHOME, linetype=STHM), color = "blue") + 
+    geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype=PRED_SPLIT), color = "green") + 
     scale_linetype_manual(name = "Events", 
-                          values = c(2,2,2), 
+                          values = c("longdash","longdash","longdash"), 
                           guide = guide_legend(title.position = "top",title.hjust = 0.5,override.aes = list(color = c("blue", "red", "green")), direction = "vertical")) +
     theme(legend.position = "bottom", 
           title = element_text(hjust = 0.5, size = 18),
@@ -258,7 +262,9 @@ ggbar.overall <- function(selected.state = "NY",
   state_cases[is.na(state_cases$pct_increase) | state_cases$pct_increase <= 0, "pct_increase"] <- NA
   state_cases$Type <- "State Moving Average"
   
-  US.ma <- covid_TS_US_long.cases[c("date", y.value, my_diff)] %>%
+  US <- covid_TS_US_long.cases %>%
+    rbind.data.frame(covid_TS_US_long.pred)
+  US.ma <- US[c("date", y.value, my_diff)] %>%
     rename(Values = all_of(y.value)) %>%
     rename(diff = all_of(my_diff)) %>%
     mutate(diff.ma =  c(diff[1:7-1], zoo::rollmean(diff, 7, align="right"))) %>%
@@ -300,7 +306,7 @@ ggbar.overall <- function(selected.state = "NY",
            geom_vline(aes(xintercept=state_policy.df[state_policy.df$POSTCODE == selected.state,]$STAYHOME, color = STHM), linetype="longdash", size = 1, show.legend = F) +
            geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), color = "Predictions Split"), linetype="longdash", size = 1, show.legend = F) + 
            scale_color_manual(name = "Line Types", 
-                              values = c("blue", "red", "black", "steelblue", "green"),
+                              values = c("blue", "red", "green", "black", "steelblue"),
                               guide = guide_legend(title.position = "top",
                                                    title.hjust = 0.5,
                                                    direction = "vertical")) +
@@ -376,10 +382,13 @@ ggbar.US <- function(y.value="cases",
                                     title.hjust = 0.5)) +
            geom_line(aes(x=date, y=ma), color="black", arrow=arrow(ends="last"), show.legend = F)  + 
            geom_line(aes( x=date, y=ma, linetype=Type), color="black") +
-           geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype = "Predictions Split"), color="green") + 
-           guides(linetype = guide_legend(title = "Line Type",
-                                          title.position = "top",
-                                          title.hjust = 0.5)) +
+           geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype = "Predictions Split"), color="green", show.legend = F) + 
+           scale_linetype_manual(name = "Events",
+                                 values = c("longdash","solid"),
+                                 guide = guide_legend(title = "Line Type",
+                                                      title.position = "top",
+                                                      title.hjust = 0.5)) +
+           guides(color = NULL) +
            scale_x_datetime(date_breaks = "1 month", date_minor_breaks = "1 week", date_labels = "%b") +
            scale_y_continuous(label = scales::comma) +
            labs(x = "Date",
@@ -510,8 +519,12 @@ ggplot.US <- function(y.value="cases",
     ) +
     scale_color_manual(values=region_palette, aesthetics = c("color")) +
     guides(color = guide_legend(title = "Region",
-                                title.position = "left")) +
+                                title.position = "top",
+                                title.hjust = 0.5)) +
     geom_vline(aes(xintercept=as.POSIXct.Date(as.Date(cur_date, "%m-%d-%Y")), linetype = "Predictions Split"), color="green") + 
+    scale_linetype_manual(name = "Events", 
+                          values = c("longdash"), 
+                          guide = guide_legend(title.position = "top",title.hjust = 0.5)) +
     theme(legend.position = "bottom", 
           title = element_text(hjust = 0.5, size = 18),
           axis.title.x = element_text(size = 16, lineheight = 24),

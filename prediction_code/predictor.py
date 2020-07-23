@@ -3,6 +3,8 @@ import numpy as np
 import warnings
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
+DEBUG = True
+
 class Predictor():
     def __init__(self,path,col,state):
         self.path=path+'/data/csv/time_series/covid_TS_counties_long.cases.csv'
@@ -12,22 +14,26 @@ class Predictor():
         self.Data=pd.read_csv(self.path,parse_dates=True)
         self.Data=self.Data[self.Data['State']==self.state]
         self.Counties=pd.unique(self.Data['County'])
-        #self.Data.set_index(['County', 'date'], inplace=True)
+
         self.Data_Dates=self.Data.pivot_table(values=self.col,
             index='date',columns='County',aggfunc='first')
-        #for county in self.Counties :
-        #    self.Data_Dates[county]=pd.Series(self.Data.loc[county][self.col])
+
         self.Data_Dates.fillna(value=0,inplace=True)
         return(self.Data_Dates)
     def Build_Training_Data(self,v=7,training=True):
         if training :
             self.v=v
-        self.Values=[]
-        for county in self.Counties:
-            if v!=0:
-                self.Values = self.Values + list(self.Data_Dates[county].iloc[:-v]) + 5 * [np.nan]
-            else:
-                self.Values = self.Values + list(self.Data_Dates[county]) + 5 * [np.nan]
+        nan_arr = np.empty((5,self.Data_Dates.shape[1]))
+        nan_arr[:] = np.nan
+        self.Values = []
+        if DEBUG:
+            print("Tail: ", self.Data_Dates.tail(v).to_numpy().shape)
+            print("NaN: ", nan_arr.shape)
+        self.Values=np.append(self.Data_Dates.tail(v).to_numpy(),nan_arr,axis=0).flatten('F')
+        
+        if DEBUG:
+            print("Values: ", self.Values.shape)
+            display(self.Values)
     def GridSearch(self,n_days):
         self.Build_Training_Data(v=n_days,training=True)
         warnings.filterwarnings("ignore")
@@ -36,6 +42,8 @@ class Predictor():
         for p in range(1, 5):
             for q in range(1, 5):
                 for d in range(3):
+                    if DEBUG:
+                        print("Running models with (p,d,q) as: ", (p,d,q))
                     try :
                         model = SARIMAX(self.Values, order=(p, d, q),missing='drop', enforce_invertibility=False)
                         results = model.fit(disp=0)

@@ -25,17 +25,11 @@ class Predictor():
             self.v=v
         nan_arr = np.empty((5,self.Data_Dates.shape[1]))
         nan_arr[:] = np.nan
-        #self.Values = []
+
         if DEBUG:
             print("Tail: ", self.Data_Dates.tail(v).to_numpy().shape)
             print("NaN: ", nan_arr.shape)
         self.Values=np.append(self.Data_Dates.head(-v).to_numpy(),nan_arr,axis=0).flatten('F').tolist()
-        
-        #for county in self.Counties:
-        #    if v!=0:
-        #        self.Values = self.Values + list(self.Data_Dates[county].iloc[:-v]) + 5 * [np.nan]
-        #    else:
-        #        self.Values = self.Values + list(self.Data_Dates[county]) + 5 * [np.nan]
         if DEBUG:
             display(self.Values)
     def GridSearch(self,n_days):
@@ -51,24 +45,43 @@ class Predictor():
                     try :
                         model = SARIMAX(self.Values, order=(p, d, q),missing='drop', enforce_invertibility=False)
                         results = model.fit(disp=0)
-                        scores_counties = []
-                        for county in self.Counties:
-                            DataCounty = self.Data_Dates[county].dropna()
-                            ModelCounty = SARIMAX(DataCounty[:-self.v], order=(p, d, q), missing='drop',
-                                                  enforce_invertibility=False)
-                            res = ModelCounty.smooth(results.params)
-                            fc = res.get_prediction(len(DataCounty) - self.v, len(DataCounty))
-                            frame = fc.summary_frame(alpha=0.05)
-                            fc = frame['mean']
-                            Y = DataCounty.iloc[-self.v:].values
-                            Yhat = fc[-self.v:].values
+                        ## Jose vectorized code
+                        DataCounty = self.Data_Dates
+                        ModelCounty = DataCounty.head(-self.v).apply(lambda x: 
+                            SARIMAX(x, order=(p, d, q), missing = 'drop', enforce_invertibility=False))
+                        res = ModelCounty.apply(lambda x: x.smooth(results.params))
+                        fc = res.apply(lambda x: 
+                            x.get_prediction(DataCounty.shape[0] - self.v, DataCounty.shape[0]))
+                        frame = fc.apply(lambda x: x.summary_frame(alpha = 0.5))
+                        fc = frame.apply(lambda x: x['mean'])
+                        Y = DataCounty.tail(self.v).to_numpy().T
+                        Yhat = fc.T.tail(self.v).to_numpy().T
+                        MAE = np.sum(abs(Y - Yhat),axis=1)/self.v
+
+                        ## Original
+                        #for county in self.Counties:
+                        #    DataCounty = self.Data_Dates[county].dropna()
+                        #    ModelCounty = SARIMAX(DataCounty.head(-self.v), order=(p, d, q), missing='drop',
+                        #                          enforce_invertibility=False)
+                        #    res = ModelCounty.smooth(results.params)
+                        #    fc = res.get_prediction(len(DataCounty) - self.v, len(DataCounty))
+                        #    frame = fc.summary_frame(alpha=0.05)
+                        #    fc = frame['mean']
+                        #    Y = DataCounty.iloc[-self.v:].values
+                        #    #display(Y)
+                        #    Yhat = fc[-self.v:].values
+
+                        #    print(Y.shape, Yhat.shape)
                             # Ybar = np.mean(Y)
-                            MAE = (sum(abs(Y - Yhat)) / self.v)
-                            scores_counties.append(MAE)
+                        #    MAE = (sum(abs(Y - Yhat)) / self.v)
+                        #    print("MAE: ", MAE)
+                        #    scores_counties.append(MAE)
                     except :
                         print('Training failed for parameters :',(p,d,q))
-                    scores.append(np.nanmean(scores_counties))
+                    scores.append(np.nanmean(MAE))
                     params.append((p, d, q))
+                    if DEBUG:
+                        print("Score: ", scores[-1])
         argbest = np.argmin(scores)
         print('Best MAE : ', scores[argbest])
         print('Best params : ', params[argbest])
@@ -84,6 +97,21 @@ class Predictor():
                           enforce_invertibility=False)
         BestRes = BestMod.fit(disp=0)
         self.Pred= pd.DataFrame(columns=['County', 'mean', 'mean_ci_upper', 'mean_ci_lower'])
+
+        # Jose Testing vectorized output
+        #DataCounty = self.Data_Dates
+        #ModelCounty = DataCounty.apply(lambda x: 
+        #    SARIMAX(x, order=params, missing = 'drop', enforce_invertibility=False))
+        #res = ModelCounty.apply(lambda x: x.smooth(BestRes.params))
+        #fc = res.apply(lambda x: 
+        #    x.get_prediction(0, DataCounty.shape[0] + n_days))
+        #frame = fc.apply(lambda x: x.summary_frame(alpha = 0.5))
+        #fc = frame.apply(lambda x: x['mean'])
+        #confInf = frame.apply(lambda x: x['mean_ci_lower'])
+        #confSup = frame.apply(lambda x: x['mean_ci_upper'])
+        #display(frame[['County', 'mean', 'mean_ci_upper', 'mean_ci_lower']])
+
+        # Original Code
         for county in self.Counties:
             DataCounty=self.Data_Dates[county]
             ModelCounty = SARIMAX(DataCounty, order=params, missing='drop', enforce_invertibility=False)

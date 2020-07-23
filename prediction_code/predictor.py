@@ -12,10 +12,11 @@ class Predictor():
         self.Data=pd.read_csv(self.path,parse_dates=True)
         self.Data=self.Data[self.Data['State']==self.state]
         self.Counties=pd.unique(self.Data['County'])
-        self.Data.set_index(['County', 'date'], inplace=True)
-        self.Data_Dates=pd.DataFrame()
-        for county in self.Counties :
-            self.Data_Dates[county]=pd.Series(self.Data.loc[county][self.col])
+        #self.Data.set_index(['County', 'date'], inplace=True)
+        self.Data_Dates=self.Data.pivot_table(values=self.col,
+            index='date',columns='County',aggfunc='first')
+        #for county in self.Counties :
+        #    self.Data_Dates[county]=pd.Series(self.Data.loc[county][self.col])
         self.Data_Dates.fillna(value=0,inplace=True)
         return(self.Data_Dates)
     def Build_Training_Data(self,v=7,training=True):

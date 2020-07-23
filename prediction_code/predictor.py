@@ -25,14 +25,18 @@ class Predictor():
             self.v=v
         nan_arr = np.empty((5,self.Data_Dates.shape[1]))
         nan_arr[:] = np.nan
-        self.Values = []
+        #self.Values = []
         if DEBUG:
             print("Tail: ", self.Data_Dates.tail(v).to_numpy().shape)
             print("NaN: ", nan_arr.shape)
-        self.Values=np.append(self.Data_Dates.tail(v).to_numpy(),nan_arr,axis=0).flatten('F')
+        self.Values=np.append(self.Data_Dates.head(-v).to_numpy(),nan_arr,axis=0).flatten('F').tolist()
         
+        #for county in self.Counties:
+        #    if v!=0:
+        #        self.Values = self.Values + list(self.Data_Dates[county].iloc[:-v]) + 5 * [np.nan]
+        #    else:
+        #        self.Values = self.Values + list(self.Data_Dates[county]) + 5 * [np.nan]
         if DEBUG:
-            print("Values: ", self.Values.shape)
             display(self.Values)
     def GridSearch(self,n_days):
         self.Build_Training_Data(v=n_days,training=True)

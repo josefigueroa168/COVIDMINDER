@@ -1,0 +1,427 @@
+---
+title: "Predictor"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+setwd("~/ShinyApps/ChaTPytoR")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "../")
+```
+
+
+```{r echo = F, results = 'hide',  warning=FALSE, message=FALSE}
+
+#### Library and Data Imports ####
+## Load essential R packages
+source("modules/Source.R")
+## Load in model outputs per state:
+source("modules/data_load.R")
+
+```
+
+```{r echo=FALSE}
+
+is.rankdeficient <- function(xregg) {
+  constant_columns <- apply(xregg, 2, is.constant)
+  if (any(constant_columns)) {
+    xregg <- xregg[, -which(constant_columns)[1]]
+  }
+  sv <- svd(na.omit(cbind(rep(1, NROW(xregg)), xregg)))$d
+  min(sv)/sum(sv) < .Machine$double.eps
+}
+
+    # initialize the table that holds our predictions only once
+    update_i <- matrix(0, ncol = 14, nrow = 0)
+    update_i <- as.data.frame(update_i)
+    colnames(update_i) <- c("countyFIPS", "County", "State", "stateFIPS", "date", "cases", "deaths", "population", "p_cases", "p_deaths", "diff", "p_diff", "d_diff", "p.d_diff")
+    
+    update_i$countyFIPS <- as.integer(update_i$countyFIPS)          
+    update_i$County <- as.character(update_i$County)
+    update_i$State <- as.character(update_i$State)            
+    update_i$stateFIPS <- as.integer(update_i$stateFIPS)
+    update_i$date <- as.Date(update_i$date)            
+    update_i$cases <- as.integer(update_i$cases)
+    update_i$deaths <- as.integer(update_i$deaths)           
+    update_i$population <- as.integer(update_i$population)
+    update_i$p_cases <- as.double(update_i$p_cases)            
+    update_i$p_deaths <- as.double(update_i$p_deaths)
+    update_i$diff <- as.integer(update_i$diff)            
+    update_i$p_diff <- as.double(update_i$p_diff)
+    update_i$d_diff <- as.integer(update_i$d_diff)             
+    update_i$p.d_diff <- as.double(update_i$p.d_diff)
+    
+    update_i <- as_tibble(update_i)
+  # "AL" "AK" "AZ" "AR" "CA" "CO" "CT" "DE" "DC" "FL" "GA" "HI" "ID" "IL" "IN" "IA" "KS" "KY" "LA" "ME" "MD" "MA" "MI" "MN" "MS" "MO" "MT"
+  # "NE" "NV" "NH" "NJ" "NM" "NY" "NC" "ND" "OH" "OK" "OR" "PA" "RI" "SC" "SD" "TN" "TX" "UT" "VT" "VA" "WA" "WV" "WI" "WY"
+  #state = "NY"
+
+  # "countyFIPS" "County"     "State"      "stateFIPS"  "date"       "cases"      "deaths"     "population" "p_cases"    "p_deaths"  
+  # "diff"       "p_diff"     "d_diff"     "p.d_diff" 
+  #col = "p_cases"
+  
+  # Number of days (out of 7) to include in our training set
+  v = 7
+  n_days = 5 # number of days to predict
+  
+  states <- c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY")
+  for (state in states) { # loop over states ^^^^^
+    
+    data <- covid_TS_counties_long.pred
+    data <- data[which(data$State == state),] 
+    s_fip <- data$stateFIPS[1]
+    #data[5] <- as.character(data[5])
+    dates = (unique(data$date))
+    counties <- unique(data$County)
+    c_fips <- unique(data$countyFIPS)
+    future_dates <- seq(as.Date(dates[length(dates)-1]),by='days',length=n_days)
+      
+    # create the table of updated mean predictions per date
+   
+    update <- update_i
+    for (i in 1:length(counties)) {
+      for ( j in 1 : n_days ) {
+          update <- update %>%
+            add_row(County = counties[i],
+                    countyFIPS = c_fips[i],
+                    stateFIPS = s_fip,
+                    State = state,
+                    date = as.Date(future_dates[j]))
+      }
+    }
+        
+    dates = as.character(unique(data$date))
+    i_vars <- c("cases", "deaths", "population", "p_cases", "p_deaths", "diff", "p_diff", "d_diff", "p.d_diff" )
+    for (col in i_vars) { # loop over variables of interest ^^^^^
+    
+      m <- matrix(0, ncol = length(dates) + 1, nrow = length(counties))
+      colnames(m) <- c("County", dates)
+      dates_data <- as_tibble(m)
+      dates_data$County = counties
+      dates_data <- column_to_rownames(dates_data, var = "County")
+      
+      
+      for (i in 1:length(counties)) {
+        county = counties[i]
+        count_dat <- data %>%
+           filter(County == county)
+        i_dat <- count_dat %>%
+          pull(col)
+        date_dat <- count_dat %>%
+          pull(date)
+        for (j in 1:length(date_dat) ) {
+            c_date = as.character(date_dat[j])
+            date= date_dat[j]
+            if (nrow(count_dat[which(count_dat$date == date),]) != 0) {
+              dates_data[[c_date]][i] = count_dat[which(count_dat$date == date),][[col]]
+            }
+        }
+      }
+      
+      #m <- matrix(0, ncol = 7, nrow = length(counties))
+      #colnames(m) <- c("County", "AIC", "AICc", "BIC", "sig2", "loglik" ,"MAE")
+      #fit_sum <- as_tibble(m)
+      #fit_sum$County = counties
+      #rownames(fit_sum) <- NULL
+      #fit_sum <- column_to_rownames(fit_sum, var = "County")
+      
+      
+      #matrices we save predicted means, uppers and lowers to
+      m <- matrix(0, ncol = length(counties), nrow = n_days)
+      colnames(m) <- counties
+      means <- as_tibble(m)
+      #m <- matrix(0, ncol = length(counties), nrow = n_days)
+      #colnames(m) <- counties
+      #uppers <- as_tibble(m)
+      #m <- matrix(0, ncol = length(counties), nrow = n_days)
+      #colnames(m) <- counties
+      #lowers <- as_tibble(m)
+      
+      t_dates_data <- as_tibble(t(dates_data))
+      
+      t_dates_data <- t_dates_data %>%
+        replace(is.na(.), 0) %>%
+        replace(. == Inf, 0) %>%
+        replace(. == -Inf, 0)
+      
+      
+      for ( i in 1:length(colnames(t_dates_data)) ) {
+        
+        
+        county = colnames(t_dates_data)[i]
+        
+        Lda <- BoxCox.lambda(ts(t_dates_data[i]), lower = 0)
+        
+        xreg <- as_tibble(data[which(data$County == county & data$State == state),])
+        myvars <- names(xreg) %in% c("countyFIPS", "County", "stateFIPS", "State", "date", col)
+        xreg <- xreg[!myvars]
+        xreg <- as.matrix(xreg)
+        
+        if ( is.rankdeficient(xreg) ) { # if some subset of remaining columns are 
+                                        # rank deficient then remove them from xreg
+          constant_columns <- apply(xreg, 2, is.constant)
+          xreg <- xreg[, -which(constant_columns)]
+        }
+        
+        sv <- svd(na.omit(cbind(rep(1, NROW(xreg)), xreg)))$d
+        
+        if (min(sv) / sum(sv) < .Machine$double.eps) { 
+           # if xreg is still rank deficient then skip adding xreg
+           fit <- auto.arima(ts(t_dates_data[i]), 
+                          max.p = 5,
+                          max.q = 5,
+                          max.d = 3,
+                          lambda = Lda,
+                          parallel = TRUE,
+                          num.cores = 12)
+        } else {
+            # add xreg
+            fit <- auto.arima(ts(t_dates_data[i]), 
+                          xreg = xreg,
+                          max.p = 5,
+                          max.q = 5,
+                          max.d = 3,
+                          lambda = Lda,
+                          parallel = TRUE,
+                          num.cores = 12)
+        }
+        frame <- forecast(fit, 5)
+        #fit_sum$AIC[i] = fit$aic
+        #fit_sum$AICc[i] = fit$aicc
+        #fit_sum$BIC[i] = fit$bic
+        #fit_sum$sig2[i] = fit$sigma2
+        #fit_sum$loglik[i] = fit$loglik
+        #fit_sum$MAE[i] = accuracy(fit)[3]
+        means[[county]] <- frame$mean
+        for ( i in 1:n_days) {
+          dte = future_dates[i]
+          if (nrow(update[which(update$date == dte & update$County == county),]) != 0 ) {
+            update[which(update$date == dte & update$County == county),][[col]] <- means[[county]][i]
+          } else {
+            stop("Invalid county/date pair in update dataframe")
+          }
+        }
+        #uppers[[county]] <- frame$upper[,2]
+        #lowers[[county]] <- frame$lower[,2]
+        
+      }
+      
+      #uppers <- as.data.frame(uppers)
+      #lowers <- as.data.frame(lowers)
+      #fit_sum <- as.data.frame(fit_sum)
+      #file_name = "prediction_code/Predictions/"
+      #file_name = paste(file_name, state, "_", col, "_", sep = "")
+      #means_name = paste(file_name, "means.rds", sep = "")
+      #uppers_name = paste(file_name, "uppers.rds", sep = "")
+      #lowers_name = paste(file_name, "lowers.rds", sep = "")
+      #fit_sum_name = paste(file_name, "fit_sum.rds", sep = "")
+      #saveRDS(means, means_name)
+      #saveRDS(uppers, uppers_name)
+      #saveRDS(lowers, lowers_name)
+      #saveRDS(fit_sum, fit_sum_name)
+      
+    }
+    
+    updated <- as.data.frame(update)
+    file_name = paste("prediction_code/Predictions_", state, ".rds", sep = "")
+    saveRDS(updated, file_name)
+    
+  }
+  
+  
+```
+
+```{r echo=FALSE}
+  # Re-initialize the predictions table. 
+  # Date set here:
+  final_known_date = "2020-07-22"
+
+  m <- matrix(0, ncol = 14, nrow = 0)
+  colnames(m) <- c("countyFIPS", "County", "State", "stateFIPS", "date", "cases", "deaths", "population", "p_cases", "p_deaths",
+                   "diff", "p_diff", "d_diff", "p.d_diff")
+  d <- as_tibble(m)
+  file_name = paste("prediction_code/Prediction_", final_known_date, ".rds" ,sep = "")
+  saveRDS(d, file_name)
+
+```
+
+
+ATTEMPTING PARALLELIZATION ....
+
+```{r echo=FALSE}
+
+is.rankdeficient <- function(xregg) {
+  constant_columns <- apply(xregg, 2, is.constant)
+  if (any(constant_columns)) {
+    xregg <- xregg[, -which(constant_columns)[1]]
+  }
+  sv <- svd(na.omit(cbind(rep(1, NROW(xregg)), xregg)))$d
+  min(sv)/sum(sv) < .Machine$double.eps
+}
+
+    # initialize the table that holds our predictions only once
+    update_i <- matrix(0, ncol = 14, nrow = 0)
+    update_i <- as.data.frame(update_i)
+    colnames(update_i) <- c("countyFIPS", "County", "State", "stateFIPS", "date", "cases", "deaths", "population", "p_cases", "p_deaths", "diff", "p_diff", "d_diff", "p.d_diff")
+    
+    update_i$countyFIPS <- as.integer(update_i$countyFIPS)          
+    update_i$County <- as.character(update_i$County)
+    update_i$State <- as.character(update_i$State)            
+    update_i$stateFIPS <- as.integer(update_i$stateFIPS)
+    update_i$date <- as.Date(update_i$date)            
+    update_i$cases <- as.integer(update_i$cases)
+    update_i$deaths <- as.integer(update_i$deaths)           
+    update_i$population <- as.integer(update_i$population)
+    update_i$p_cases <- as.double(update_i$p_cases)            
+    update_i$p_deaths <- as.double(update_i$p_deaths)
+    update_i$diff <- as.integer(update_i$diff)            
+    update_i$p_diff <- as.double(update_i$p_diff)
+    update_i$d_diff <- as.integer(update_i$d_diff)             
+    update_i$p.d_diff <- as.double(update_i$p.d_diff)
+    
+    update_i <- as_tibble(update_i)
+  # Number of days (out of 7) to include in our training set
+  v = 7
+  n_days = 5 # number of days to predict
+  
+  states <- c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY")
+  
+  # add parallelization
+  library(foreach)
+  library(doParallel)
+  
+  cores=detectCores()
+  cl <- makeCluster(cores[1]-1) #not to overload your computer
+  registerDoParallel(cl)
+
+  final <- foreach(f=1:length(states), .combine=bind_rows) %dopar% {
+  # loop over states ^^^^^
+    state = states[f]
+    data <- covid_TS_counties_long.pred
+    data <- data[which(data$State == state),] 
+    s_fip <- data$stateFIPS[1]
+    #data[5] <- as.character(data[5])
+    dates = (unique(data$date))
+    counties <- unique(data$County)
+    c_fips <- unique(data$countyFIPS)
+    future_dates <- seq(as.Date(dates[length(dates)-1]),by='days',length=n_days)
+      
+    # create the table of updated mean predictions per date
+   
+    update <- update_i
+    for (i in 1:length(counties)) {
+      for ( j in 1 : n_days ) {
+          update <- update %>%
+            add_row(County = counties[i],
+                    countyFIPS = c_fips[i],
+                    stateFIPS = s_fip,
+                    State = state,
+                    date = as.Date(future_dates[j]))
+      }
+    }
+        
+    dates = as.character(unique(data$date))
+    i_vars <- c("cases", "deaths", "population", "p_cases", "p_deaths", "diff", "p_diff", "d_diff", "p.d_diff" )
+    for (col in i_vars) { # loop over variables of interest ^^^^^
+    
+      m <- matrix(0, ncol = length(dates) + 1, nrow = length(counties))
+      colnames(m) <- c("County", dates)
+      dates_data <- as_tibble(m)
+      dates_data$County = counties
+      dates_data <- column_to_rownames(dates_data, var = "County")
+      
+      
+      for (i in 1:length(counties)) {
+        county = counties[i]
+        count_dat <- data %>%
+           filter(County == county)
+        i_dat <- count_dat %>%
+          pull(col)
+        date_dat <- count_dat %>%
+          pull(date)
+        for (j in 1:length(date_dat) ) {
+            c_date = as.character(date_dat[j])
+            date= date_dat[j]
+            if (nrow(count_dat[which(count_dat$date == date),]) != 0) {
+              dates_data[[c_date]][i] = count_dat[which(count_dat$date == date),][[col]]
+            }
+        }
+      }
+      
+      m <- matrix(0, ncol = length(counties), nrow = n_days)
+      colnames(m) <- counties
+      means <- as_tibble(m)
+      
+      t_dates_data <- as_tibble(t(dates_data))
+      
+      t_dates_data <- t_dates_data %>%
+        replace(is.na(.), 0) %>%
+        replace(. == Inf, 0) %>%
+        replace(. == -Inf, 0)
+      
+      
+      for ( i in 1:length(colnames(t_dates_data)) ) {
+        
+        
+        county = colnames(t_dates_data)[i]
+        
+        Lda <- BoxCox.lambda(ts(t_dates_data[i]), lower = 0)
+        
+        xreg <- as_tibble(data[which(data$County == county & data$State == state),])
+        myvars <- names(xreg) %in% c("countyFIPS", "County", "stateFIPS", "State", "date", col)
+        xreg <- xreg[!myvars]
+        xreg <- as.matrix(xreg)
+        
+        if ( is.rankdeficient(xreg) ) { # if some subset of remaining columns are 
+                                        # rank deficient then remove them from xreg
+          constant_columns <- apply(xreg, 2, is.constant)
+          xreg <- xreg[, -which(constant_columns)]
+        }
+        
+        sv <- svd(na.omit(cbind(rep(1, NROW(xreg)), xreg)))$d
+        
+        if (min(sv) / sum(sv) < .Machine$double.eps) { 
+           # if xreg is still rank deficient then skip adding xreg
+           fit <- auto.arima(ts(t_dates_data[i]), 
+                          max.p = 5,
+                          max.q = 5,
+                          max.d = 3,
+                          lambda = Lda,
+                          parallel = TRUE,
+                          num.cores = cores[1]-1)
+        } else {
+            # add xreg
+            fit <- auto.arima(ts(t_dates_data[i]), 
+                          xreg = xreg,
+                          max.p = 5,
+                          max.q = 5,
+                          max.d = 3,
+                          lambda = Lda,
+                          parallel = TRUE,
+                          num.cores = cores[1]-1)
+        }
+        frame <- forecast(fit, 5)
+        means[[county]] <- frame$mean
+        for ( i in 1:n_days) {
+          dte = future_dates[i]
+          if (nrow(update[which(update$date == dte & update$County == county),]) != 0 ) {
+            update[which(update$date == dte & update$County == county),][[col]] <- means[[county]][i]
+          } else {
+            stop("Invalid county/date pair in update dataframe")
+          }
+        
+        }
+      }
+      }
+    
+    updated <- as.data.frame(update)
+    
+    updated
+    
+  }
+  
+  saveRDS(final, "prediction_code/Predictions_FINAL.rds")
+  
+```
+
+

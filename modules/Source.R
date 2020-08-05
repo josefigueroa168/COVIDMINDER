@@ -16,7 +16,7 @@
 
 options(repos=structure(c(CRAN="http://cran.rstudio.com"))) # Needed for Rstudio server side
 
-dependencies <- c("shiny", "dplyr", "gghighlight", "ggrepel", "geojsonio", "gt", "htmltools", "leaflet", "leaflet.extras", "mapview", "R6", "shiny","tidyverse", "zoo")
+dependencies <- c("forecast", "shiny", "plyr", "dplyr", "gghighlight", "ggrepel", "geojsonio", "gt", "htmltools", "leaflet", "leaflet.extras", "mapview", "R6", "shiny","tidyverse", "zoo")
 
 # Check and install packages not yet available
 install.dependencies <- dependencies[!(dependencies %in% installed.packages()[, "Package"])]
@@ -25,7 +25,9 @@ if (length(install.dependencies) > 0) {
 }
 
 # Load all packages
+library(forecast)
 library(dplyr)
+library("plyr")
 library(geojsonio)
 library(gghighlight)
 library(ggrepel)

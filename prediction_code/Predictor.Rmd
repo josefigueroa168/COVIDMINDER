@@ -150,7 +150,7 @@ is.rankdeficient <- function(xregg) {
         
         county = colnames(t_dates_data)[i]
         
-        Lda <- BoxCox.lambda(ts(t_dates_data[i]), lower = 0)
+       # Lda <- BoxCox.lambda(ts(t_dates_data[i]), lower = 0)
         
         xreg <- as_tibble(data[which(data$County == county & data$State == state),])
         myvars <- names(xreg) %in% c("countyFIPS", "County", "stateFIPS", "State", "date", col)
@@ -170,21 +170,16 @@ is.rankdeficient <- function(xregg) {
            fit <- auto.arima(ts(t_dates_data[i]), 
                           max.p = 5,
                           max.q = 5,
-                          max.d = 3,
-                          lambda = Lda,
-                          parallel = TRUE,
-                          num.cores = 12)
+                          max.d = 3)
         } else {
             # add xreg
             fit <- auto.arima(ts(t_dates_data[i]), 
                           xreg = xreg,
                           max.p = 5,
                           max.q = 5,
-                          max.d = 3,
-                          lambda = Lda,
-                          parallel = TRUE,
-                          num.cores = 12)
+                          max.d = 3)
         }
+        #autoplot(forecast(fit, 5))
         frame <- forecast(fit, 5)
         #fit_sum$AIC[i] = fit$aic
         #fit_sum$AICc[i] = fit$aicc
@@ -365,7 +360,7 @@ is.rankdeficient <- function(xregg) {
         
         county = colnames(t_dates_data)[i]
         
-        Lda <- BoxCox.lambda(ts(t_dates_data[i]), lower = 0)
+        #Lda <- BoxCox.lambda(ts(t_dates_data[i]), lower = 0)
         
         xreg <- as_tibble(data[which(data$County == county & data$State == state),])
         myvars <- names(xreg) %in% c("countyFIPS", "County", "stateFIPS", "State", "date", col)
@@ -385,20 +380,15 @@ is.rankdeficient <- function(xregg) {
            fit <- auto.arima(ts(t_dates_data[i]), 
                           max.p = 5,
                           max.q = 5,
-                          max.d = 3,
-                          lambda = Lda,
-                          parallel = TRUE,
-                          num.cores = cores[1]-1)
+                          max.d = 3)
+                          #lambda = Lda)
         } else {
             # add xreg
             fit <- auto.arima(ts(t_dates_data[i]), 
-                          xreg = xreg,
                           max.p = 5,
                           max.q = 5,
-                          max.d = 3,
-                          lambda = Lda,
-                          parallel = TRUE,
-                          num.cores = cores[1]-1)
+                          max.d = 3)
+                          #lambda = Lda)
         }
         frame <- forecast(fit, 5)
         means[[county]] <- frame$mean

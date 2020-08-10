@@ -179,8 +179,9 @@ is.rankdeficient <- function(xregg) {
                           max.q = 5,
                           max.d = 3)
         }
-        #autoplot(forecast(fit, 5))
-        frame <- forecast(fit, 5)
+        autoplot(forecast(fit, 5))
+        #view(fit)
+        #frame <- forecast(fit, 5)
         #fit_sum$AIC[i] = fit$aic
         #fit_sum$AICc[i] = fit$aicc
         #fit_sum$BIC[i] = fit$bic
